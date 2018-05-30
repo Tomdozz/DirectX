@@ -1,0 +1,100 @@
+cbuffer Light : register(b0)
+{
+	float4 lightColor;
+	float4 lightPos;
+	float4 CameraPosition;	
+
+};
+
+cbuffer Phong : register(b1)
+{	
+	
+	float4 AmbientColor;
+	float4 DiffuseColor;
+	float4 SpecularColor;
+	float Shine;
+	float hasTex;
+	//float what tex bool för vilken tex
+	float2 padding;
+};
+
+cbuffer Lambert : register(b2)
+{
+	float4 Pos;
+	float3 Normal;
+	float2 TexCoord;
+};
+
+Texture2D texDiffuse : register(t0);
+Texture2D texBump : register(t1);
+Texture2D ka: register(t2);
+//Texture2D ks: register(t3);
+//Texture2D shadowMap: register(t4);
+
+TextureCube cubemap: register(t3);
+
+SamplerState texSampler : register (s0);
+
+
+struct PSIn
+{
+	float4 Pos  : SV_Position;
+	float3 Normal : NORMAL;
+	float2 TexCoord : TEX;
+	float4 WorldPos : POSITION;
+	
+	float3 Tangent : TANGENT;
+	float3 Binormal : BINORMAL;
+
+	float3 normalModel:Normal0;
+	float3 normalView : NORMAL1;
+	float3 color : COLOR0;
+	float3 backColor : COLOR1;
+};
+
+
+//-----------------------------------------------------------------------------------------
+// Pixel Shader
+//-----------------------------------------------------------------------------------------
+
+float4 PS_main(PSIn input) : SV_Target
+{	
+
+	//----------NormalMap----------------------------------------------------------------
+	input.Normal = normalize(input.Normal);
+	input.Tangent = normalize(input.Tangent);
+	input.Binormal = normalize(input.Binormal);
+	
+	float3x3 TBN = float3x3(input.Tangent, input.Binormal, input.Normal);
+	float3 Normal = (255.0/128.0 * texBump.Sample(texSampler, input.TexCoord).xyz - 1.0);
+	Normal = mul(TBN,Normal);
+	Normal = normalize(Normal);
+	
+	Normal = input.Normal;
+	//return float4(Normal,1);
+	//-----------------------------------------------------------------------------------
+
+	//---------LightCalculations---------------------------------------------------------
+	float4 Ambient;
+	Ambient = float4(0.1,0.1,0.1,1);
+	float4 texColor = texDiffuse.Sample(texSampler, input.TexCoord);
+
+	float4 L = normalize(lightPos - input.WorldPos);
+	
+	float4 V = normalize(CameraPosition-input.WorldPos);
+	float4 R = reflect(L, float4(Normal,0));
+
+	float diff = dot(L,float4(Normal,0));
+	
+	//float4 cube = cubemap.Sample(texSampler, reflect(L,Normal));
+	//float4 Diffuse = cube*diff;
+	float4 Diffuse = texColor* diff;
+	
+	float Phong = dot(R,V);
+	Phong = pow(abs(Phong),Shine);
+	
+	float4 Specular = SpecularColor*Phong;
+	
+	return Ambient + (Diffuse + Specular);
+	//-----------------------------------------------------------------------------------
+}
