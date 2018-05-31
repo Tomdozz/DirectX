@@ -9,3 +9,5 @@ This framework is used for educational purposes an **Malmö University**, when h
 ### Some 3D-models(by Tom Andersson)
 ![Some models made as assets for a game](https://github.com/Tomdozz/DirectX/blob/master/pipes.png)
 ![Some models made as assets for a game](https://github.com/Tomdozz/DirectX/blob/master/pipes2.png)
+![Scene from the game tempus](https://github.com/Tomdozz/DirectX/blob/master/32644343_10212082383671224_1003683176461107200_n.jpg)
+
